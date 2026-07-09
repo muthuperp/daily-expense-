@@ -742,7 +742,7 @@
       <div class="section">
         <h2>Google Web App Link</h2>
         <div class="form-row">
-          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/AKfycbz-junnY0B5qu4MksyxPOvx8fGshMhwRv17HqQno6JNabKjQlfShN5YbbIE1g87YHH0kQ/exec">
+          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
           <button onclick="saveWebAppUrl()">Save URL</button>
         </div>
         <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
@@ -827,7 +827,7 @@
 
     // Unified API Router (routes to Remote Web App if saved, or google.script.run inside Sheets Iframe)
     function callApi(action, payload, successCallback, failureCallback) {
-      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbz-junnY0B5qu4MksyxPOvx8fGshMhwRv17HqQno6JNabKjQlfShN5YbbIE1g87YHH0kQ/exec";
 
       if (!webAppUrl) {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -887,7 +887,7 @@
     }
 
     function loadSavedUrl() {
-      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbz-junnY0B5qu4MksyxPOvx8fGshMhwRv17HqQno6JNabKjQlfShN5YbbIE1g87YHH0kQ/exec";
       document.getElementById("webAppUrl").value = savedUrl;
     }
 
