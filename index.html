@@ -827,7 +827,7 @@
 
     // Unified API Router (routes to Remote Web App if saved, or google.script.run inside Sheets Iframe)
     function callApi(action, payload, successCallback, failureCallback) {
-      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbz-junnY0B5qu4MksyxPOvx8fGshMhwRv17HqQno6JNabKjQlfShN5YbbIE1g87YHH0kQ/exec";
+      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbIN-wWIuSM2cLMvj1DHz4DnpbWMA0rwJJa1c4l9tThZI15La_i1ULxKtKRDzQ4R5NnTw/exec";
 
       if (!webAppUrl) {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -887,7 +887,7 @@
     }
 
     function loadSavedUrl() {
-      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbz-junnY0B5qu4MksyxPOvx8fGshMhwRv17HqQno6JNabKjQlfShN5YbbIE1g87YHH0kQ/exec";
+      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbIN-wWIuSM2cLMvj1DHz4DnpbWMA0rwJJa1c4l9tThZI15La_i1ULxKtKRDzQ4R5NnTw/exec";
       document.getElementById("webAppUrl").value = savedUrl;
     }
 
