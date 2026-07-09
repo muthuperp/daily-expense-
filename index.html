@@ -742,7 +742,7 @@
       <div class="section">
         <h2>Google Web App Link</h2>
         <div class="form-row">
-          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/AKfycby5Gi9hUBsvJ08C1_5iFBscVgpTG2wMLHjNg1T0Xn5QfQ-fzs1_0kd3IGUyjvIlfJy1bw/exec">
           <button onclick="saveWebAppUrl()">Save URL</button>
         </div>
         <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
@@ -847,14 +847,12 @@
         return;
       }
 
-      // Bypass CORS preflight via Content-Type: text/plain
-      fetch(webAppUrl, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "text/plain"
-        },
-        body: JSON.stringify({ action: action, payload: payload })
+      // Use GET requests to ensure reliable cross-origin redirects with Google Apps Script
+      const url = webAppUrl + "?action=" + encodeURIComponent(action) + "&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
+
+      fetch(url, {
+        method: "GET",
+        mode: "cors"
       })
       .then(response => {
         if (!response.ok) throw new Error("Network response was not OK");
