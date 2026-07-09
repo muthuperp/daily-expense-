@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  < src="https://cdn.jsdelivr.net/npm/chart.js"></>
   <!-- Google Fonts (Outfit) -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -644,7 +644,7 @@
 
         <div class="form-row" style="margin-top:15px;">
           <input type="number" id="amount" placeholder="தொகை">
-          <input type="text" id="description" placeholder="விளக்கம்">
+          <input type="text" id="deion" placeholder="விளக்கம்">
         </div>
 
         <div class="form-row">
@@ -696,7 +696,7 @@
                 <th>Date</th>
                 <th>Type</th>
                 <th>Category</th>
-                <th>Description</th>
+                <th>Deion</th>
                 <th>Amount</th>
                 <th>Payment</th>
                 <th>Notes</th>
@@ -742,7 +742,7 @@
       <div class="section">
         <h2>Google Web App Link</h2>
         <div class="form-row">
-          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/AKfycby5Gi9hUBsvJ08C1_5iFBscVgpTG2wMLHjNg1T0Xn5QfQ-fzs1_0kd3IGUyjvIlfJy1bw/exec">
+          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/AKfycbzTqicYe9lTF95SOzSKgHiCH2vsIi6HIyFhlndzBaMNah7u5bQZc2PDRJKPMrbnSwuF5w/exec">
           <button onclick="saveWebAppUrl()">Save URL</button>
         </div>
         <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
@@ -780,7 +780,7 @@
     </div>
   </div>
 
-  <script>
+  <>
     let categoriesData = { income: [], expense: [] };
     let allTransactions = [];
     let filteredTransactions = [];
@@ -825,13 +825,13 @@
       });
     }
 
-    // Unified API Router (routes to Remote Web App if saved, or google.script.run inside Sheets Iframe)
+    // Unified API Router (routes to Remote Web App if saved, or google..run inside Sheets Iframe)
     function callApi(action, payload, successCallback, failureCallback) {
-      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
 
       if (!webAppUrl) {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run
+        if (typeof google !== 'undefined' && google. && google..run) {
+          google..run
             .withSuccessHandler(function(res) {
               if (successCallback) successCallback(res);
             })
@@ -847,7 +847,7 @@
         return;
       }
 
-      // Use GET requests to ensure reliable cross-origin redirects with Google Apps Script
+      // Use GET requests to ensure reliable cross-origin redirects with Google Apps 
       const url = webAppUrl + "?action=" + encodeURIComponent(action) + "&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
 
       fetch(url, {
@@ -865,7 +865,7 @@
         if (failureCallback) failureCallback(err);
         else {
           console.error("API Error: ", err);
-          alert("API இணைப்பு தோல்வியடைந்தது. URL சரியாக உள்ளதா என சரிபார்க்கவும்.");
+          alert("API Error: " + err.message + "\n\n(குறிப்பு: Web App-ஐ புதிய version-ஆக deploy செய்துள்ளீர்களா என்றும், Browser cache-ஐ clear செய்துள்ளீர்களா என்றும் சரிபார்க்கவும்.)");
         }
       });
     }
@@ -877,8 +877,8 @@
         alert("Web App URL அகற்றப்பட்டது.");
         return;
       }
-      if (!urlInput.startsWith("https://script.google.com/")) {
-        alert("சரியான Google Script Web App URL-ஐ உள்ளிடவும்.");
+      if (!urlInput.startsWith("https://.google.com/")) {
+        alert("சரியான Google  Web App URL-ஐ உள்ளிடவும்.");
         return;
       }
       localStorage.setItem("expense_webapp_url", urlInput);
@@ -887,7 +887,7 @@
     }
 
     function loadSavedUrl() {
-      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
       document.getElementById("webAppUrl").value = savedUrl;
     }
 
@@ -996,7 +996,7 @@
 
     function resetForm() {
       document.getElementById("editId").value = "";
-      document.getElementById("description").value = "";
+      document.getElementById("deion").value = "";
       document.getElementById("amount").value = "";
       document.getElementById("notes").value = "";
       document.getElementById("type").value = "Expense";
@@ -1013,13 +1013,13 @@
         type: document.getElementById("type").value,
         date: document.getElementById("date").value,
         category: document.getElementById("category").value,
-        description: document.getElementById("description").value,
+        deion: document.getElementById("deion").value,
         amount: document.getElementById("amount").value,
         paymentMethod: document.getElementById("paymentMethod").value,
         notes: document.getElementById("notes").value
       };
 
-      if (!data.date || !data.category || !data.description || !data.amount) {
+      if (!data.date || !data.category || !data.deion || !data.amount) {
         return alert("தேவையான விவரங்களை நிரப்பவும்.");
       }
 
@@ -1044,7 +1044,7 @@
         document.getElementById("editId").value = d.id;
         document.getElementById("date").value = d.date;
         document.getElementById("type").value = d.type;
-        document.getElementById("description").value = d.description;
+        document.getElementById("deion").value = d.deion;
         document.getElementById("amount").value = d.amount;
         document.getElementById("paymentMethod").value = d.paymentMethod || "Cash";
         document.getElementById("notes").value = d.notes || "";
@@ -1075,13 +1075,13 @@
         type: document.getElementById("type").value,
         date: document.getElementById("date").value,
         category: document.getElementById("category").value,
-        description: document.getElementById("description").value,
+        deion: document.getElementById("deion").value,
         amount: document.getElementById("amount").value,
         paymentMethod: document.getElementById("paymentMethod").value,
         notes: document.getElementById("notes").value
       };
 
-      if (!data.id || !data.date || !data.category || !data.description || !data.amount) {
+      if (!data.id || !data.date || !data.category || !data.deion || !data.amount) {
         return alert("தேவையான விவரங்களை நிரப்பவும்.");
       }
 
@@ -1147,7 +1147,7 @@
           <td>${item.date}</td>
           <td>${item.type === 'Income' ? 'வருமானம்' : 'செலவு'}</td>
           <td>${item.category}</td>
-          <td>${item.description || ""}</td>
+          <td>${item.deion || ""}</td>
           <td class="${item.type === 'Income' ? 'green-val' : 'red-val'}">₹${Number(item.amount).toLocaleString("en-IN")}</td>
           <td>${item.paymentMethod || ""}</td>
           <td>${item.notes || ""}</td>
@@ -1169,7 +1169,7 @@
 
       filteredTransactions = allTransactions.filter(function(item) {
         const matchSearch = !searchText ||
-          (item.description || "").toLowerCase().includes(searchText) ||
+          (item.deion || "").toLowerCase().includes(searchText) ||
           (item.category || "").toLowerCase().includes(searchText) ||
           (item.notes || "").toLowerCase().includes(searchText);
 
@@ -1195,11 +1195,11 @@
     }
 
     function exportCSV() {
-      const rows = [['ID','Date','Type','Category','Description','Amount','Payment Method','Notes']];
+      const rows = [['ID','Date','Type','Category','Deion','Amount','Payment Method','Notes']];
       filteredTransactions.forEach(function(item) {
         rows.push([
           item.id, item.date, item.type, item.category,
-          item.description || '', item.amount, item.paymentMethod || '', item.notes || ''
+          item.deion || '', item.amount, item.paymentMethod || '', item.notes || ''
         ]);
       });
 
@@ -1267,7 +1267,7 @@
             div.innerHTML = `
               <div class="recent-info">
                 <span class="recent-category">${iconMap[r.category] || "•"} ${r.category}</span>
-                <span class="recent-meta">${r.date} • ${r.description || "-"}</span>
+                <span class="recent-meta">${r.date} • ${r.deion || "-"}</span>
               </div>
               <div class="recent-amt ${r.type === 'Income' ? 'green' : 'red'}">
                 ${r.type === 'Income' ? '+' : '-'}₹${Number(r.amount).toLocaleString("en-IN")}
@@ -1481,6 +1481,6 @@
     }
 
     window.onload = initLoad;
-  </script>
+  </>
 </body>
 </html>
