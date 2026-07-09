@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>தினசரி செலவு டாஷ்போர்ட்</title>
+  <!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#01696f">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts (Outfit) -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #01696f;
+      --primary-hover: #005055;
+      --primary-light: #e6f0f0;
+      --income: #10b981;
+      --expense: #ef4444;
+      --expense-hover: #dc2626;
+      --savings: #3b82f6;
+      --bg-app: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(1, 105, 111, 0.08), 0 4px 6px -2px rgba(1, 105, 111, 0.03);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: white;
+      padding: 24px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--income);
+    }
+
+    .tagline {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .container {
+      max-w-7xl: 1200px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      box-sizing: border-box;
+      flex-grow: 1;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-card);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .nav-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-app);
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .setup-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: var(--transition);
+      margin-left: auto;
+    }
+
+    .setup-btn:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(1, 105, 111, 0.2);
+    }
+
+    .section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+      border-bottom: 2px solid var(--bg-app);
+      padding-bottom: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .card.card-income::before { background: var(--income); }
+    .card.card-expense::before { background: var(--expense); }
+    .card.card-savings::before { background: var(--savings); }
+    .card.card-neutral::before { background: var(--text-muted); }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .card .value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .green { color: var(--income); }
+    .red { color: var(--expense); }
+    .blue { color: var(--savings); }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 24px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .chart-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-box h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .chart-box .canvas-wrap {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .category-btn {
+      background: var(--bg-app);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 12px;
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-btn:hover {
+      background: white;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .category-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(1, 105, 111, 0.2);
+    }
+
+    .category-icon {
+      font-size: 24px;
+    }
+
+    .category-label {
+      font-size: 13px;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .selected-box {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+      border: 1px solid rgba(1, 105, 111, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    input, select, textarea {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-main);
+      outline: none;
+      transition: var(--transition);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(1, 105, 111, 0.1);
+    }
+
+    .form-row > * {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .secondary { background: var(--text-muted); }
+    .secondary:hover { background: #475569; }
+    .danger { background: var(--expense); }
+    .danger:hover { background: var(--expense-hover); }
+    .warning { background: #f59e0b; }
+    .warning:hover { background: #d97706; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-app);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    .green-val {
+      color: var(--income);
+      font-weight: 600;
+    }
+
+    .red-val {
+      color: var(--expense);
+      font-weight: 600;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .recent-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      background: var(--bg-card);
+      transition: var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .recent-item:hover {
+      border-color: var(--primary);
+      transform: translateX(2px);
+    }
+
+    .recent-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .recent-category {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .recent-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .recent-amt {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--bg-app);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+    }
+
+    .toolbar input, .toolbar select {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .alert-box {
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      background: #fffdf5;
+      transition: var(--transition);
+    }
+
+    .alert-danger {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    .no-alerts {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .alert-badge {
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+    }
+
+    .alert-badge.text-danger {
+      background: #fef2f2;
+      color: var(--expense);
+      border: 1px solid #fee2e2;
+    }
+
+    .alert-badge.text-success {
+      background: #ecfdf5;
+      color: var(--income);
+      border: 1px solid #d1fae5;
+    }
+
+    .budget-item {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      align-items: center;
+    }
+
+    .budget-item:last-child {
+      border-bottom: none;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 16px;
+      }
+      .container { padding: 12px; }
+      .section { padding: 16px; }
+      .category-grid { grid-template-columns: repeat(3, 1fr); }
+      .category-btn { padding: 12px 8px; }
+      .category-icon { font-size: 20px; }
+      .category-label { font-size: 11px; }
+      .topbar { flex-direction: row; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    தினசரி செலவு டாஷ்போர்ட்
+    <span class="tagline">Daily Expense Manager</span>
+  </header>
+
+  <div class="container" id="appContainer">
+    <!-- Setup Warning Banner -->
+    <div id="setupWarningBanner" class="alert-box alert-danger hidden" style="margin-bottom: 20px;">
+      ⚠️ <strong>தரவுத்தளம் அமைக்கப்படவில்லை!</strong> கூகுள் ஷீட் இன்னும் தயார் செய்யப்படவில்லை. தயவுசெய்து <strong>Settings</strong> பக்கத்திற்குச் சென்று <strong>Setup Google Sheet Database</strong> பொத்தானை கிளிக் செய்யவும்.
+    </div>
+
+    <div class="topbar">
+      <button class="nav-btn active" onclick="showTab('homeTab', this)">Home</button>
+      <button class="nav-btn" onclick="showTab('addTab', this)">Add Entry</button>
+      <button class="nav-btn" onclick="showTab('transactionsTab', this)">Transactions</button>
+      <button class="nav-btn" onclick="showTab('reportsTab', this)">Reports</button>
+      <button class="nav-btn" onclick="showTab('settingsTab', this)">Settings</button>
+    </div>
+
+    <!-- Home Tab -->
+    <div id="homeTab" class="tab-section">
+      <div class="section">
+        <h2>Home Dashboard</h2>
+        <div class="cards">
+          <div class="card card-income"><h3>Today Income</h3><div class="value green" id="homeTodayIncome">₹0</div></div>
+          <div class="card card-expense"><h3>Today Expense</h3><div class="value red" id="homeTodayExpense">₹0</div></div>
+          <div class="card card-savings"><h3>Today Savings</h3><div class="value blue" id="homeTodaySavings">₹0</div></div>
+          <div class="card card-income"><h3>Month Income</h3><div class="value green" id="homeMonthIncome">₹0</div></div>
+          <div class="card card-expense"><h3>Month Expense</h3><div class="value red" id="homeMonthExpense">₹0</div></div>
+          <div class="card card-savings"><h3>Month Savings</h3><div class="value blue" id="homeMonthSavings">₹0</div></div>
+          <div class="card card-neutral"><h3>Total Transactions</h3><div class="value" id="homeTotalTransactions">0</div></div>
+          <div class="card card-neutral"><h3>Top Category</h3><div class="value" id="homeTopCategory">-</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Budget Alerts</h2>
+        <div id="budgetAlertsContainer"></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="section">
+          <h2>Dashboard Charts</h2>
+          <div class="chart-grid">
+            <div class="chart-box">
+              <h3>Income vs Expense</h3>
+              <div class="canvas-wrap">
+                <canvas id="homeIncomeExpenseChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-box">
+              <h3>Category Expense</h3>
+              <div class="canvas-wrap">
+                <canvas id="homeCategoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Recent Transactions</h2>
+          <div id="recentTransactions" class="recent-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Tab -->
+    <div id="addTab" class="tab-section hidden">
+      <div class="section">
+        <h2 id="formTitle">புதிய பதிவு</h2>
+        <input type="hidden" id="editId">
+
+        <div class="form-row">
+          <select id="type" onchange="populateCategories(); clearCategorySelection();">
+            <option value="Income">வருமானம் (Income)</option>
+            <option value="Expense" selected>செலவு (Expense)</option>
+          </select>
+          <input type="date" id="date">
+        </div>
+
+        <div id="categoryGrid" class="category-grid"></div>
+        <div class="selected-box">தேர்ந்தெடுத்த வகை: <span id="selectedCategoryText">இல்லை</span></div>
+        <input type="hidden" id="category">
+
+        <div class="form-row" style="margin-top:15px;">
+          <input type="number" id="amount" placeholder="தொகை">
+          <input type="text" id="description" placeholder="விளக்கம்">
+        </div>
+
+        <div class="form-row">
+          <select id="paymentMethod">
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea id="notes" placeholder="குறிப்புகள்"></textarea>
+        </div>
+
+        <div class="form-row">
+          <button id="saveBtn" onclick="saveTransaction()">Save</button>
+          <button id="updateBtn" class="warning hidden" onclick="updateCurrentTransaction()">Update</button>
+          <button id="cancelBtn" class="secondary hidden" onclick="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions List Tab -->
+    <div id="transactionsTab" class="tab-section hidden">
+      <div class="section">
+        <h2>Transaction List</h2>
+
+        <div class="toolbar">
+          <input type="text" id="searchText" placeholder="Search...">
+          <input type="date" id="filterFrom">
+          <input type="date" id="filterTo">
+          <select id="filterType">
+            <option value="">All Types</option>
+            <option value="Income">Income</option>
+            <option value="Expense">Expense</option>
+          </select>
+          <select id="filterCategory">
+            <option value="">All Categories</option>
+          </select>
+          <button onclick="applyFilters()">Apply</button>
+          <button class="secondary" onclick="clearFilters()">Clear</button>
+          <button onclick="exportCSV()">Export CSV</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Notes</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="transactionTableBody">
+              <tr><td colspan="9">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div id="reportsTab" class="tab-section hidden">
+      <div class="section">
+        <h2>Reports</h2>
+        <div class="form-row">
+          <select id="reportType" onchange="toggleReportInputs()">
+            <option value="daily">Daily</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+          <input type="date" id="dailyInput">
+          <input type="month" id="monthlyInput" style="display:none;">
+          <input type="number" id="yearlyInput" placeholder="வருடம்" style="display:none;">
+          <button onclick="loadReport()">Show Report</button>
+        </div>
+
+        <div class="cards">
+          <div class="card card-income"><h3>Total Income</h3><div class="value green" id="totalIncome">₹0</div></div>
+          <div class="card card-expense"><h3>Total Expense</h3><div class="value red" id="totalExpense">₹0</div></div>
+          <div class="card card-savings"><h3>Net Savings</h3><div class="value blue" id="totalSavings">₹0</div></div>
+          <div class="card card-neutral"><h3>Total Entries</h3><div class="value" id="totalEntries">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-section hidden">
+      <!-- Remote API Setup -->
+      <div class="section">
+        <h2>Google Web App Link</h2>
+        <div class="form-row">
+          <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+          <button onclick="saveWebAppUrl()">Save URL</button>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
+          கூகுள் ஆப்ஸ் ஸ்கிரிப்டை Web App ஆக 'Anyone' அணுகலமைப்பில் deploy செய்து, அதன் லிங்கை இங்கு சேமிக்கவும்.
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>Budget Settings</h2>
+        <div id="budgetSettingsList"></div>
+        <div class="form-row" style="margin-top:20px;">
+          <button onclick="saveBudgetSettings()">Save Budgets</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Backup / Restore</h2>
+        <div class="form-row">
+          <button onclick="createBackupNow()">Create Backup</button>
+          <select id="backupListSelect" style="max-width: 300px;"></select>
+          <button class="warning" onclick="restoreSelectedBackup()">Restore Selected Backup</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Advanced Settings</h2>
+        <button class="secondary" onclick="toggleAdvancedSettings()">Show Database Setup</button>
+        <div id="advancedSettingsBox" class="hidden" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+            புதிதாக தொடங்குவதற்கு அல்லது கூகுள் ஷீட்டை இணைக்க கீழே உள்ள பொத்தானை கிளிக் செய்யவும் (முன்னெச்சரிக்கை: இது தற்போதைய தரவை அழிக்கும்):
+          </p>
+          <button class="danger" onclick="if(confirm('Warning: This will initialize and structure your Google Sheet. Setup now?')) runSetup();">Setup Google Sheet Database</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let categoriesData = { income: [], expense: [] };
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let homeIncomeChart = null;
+    let homeCategoryChart = null;
+
+    const iconMap = {
+      "சம்பளம்": "💼",
+      "வியாபாரம்": "👜",
+      "ஃப்ரீலான்ஸ்": "💻",
+      "முதலீட்டு வருமானம்": "📈",
+      "வாடகை வருமானம்": "🏠",
+      "போனஸ்": "🎁",
+      "பரிசு வருமானம்": "✉️",
+      "மற்றவை": "💰",
+      "அரிசி / மளிகை": "🛒",
+      "பால்": "🥛",
+      "காய்கறி": "🥕",
+      "பழங்கள்": "🍎",
+      "கல்வி கட்டணம்": "🎓",
+      "பயணம்": "🚌",
+      "எரிபொருள்": "⛽",
+      "மின்சாரம்": "⚡",
+      "தண்ணீர் கட்டணம்": "💧",
+      "மொபைல் / இன்டர்நெட்": "📱",
+      "வீடு வாடகை": "🏢",
+      "மருத்துவம்": "🩺",
+      "பொழுதுபோக்கு": "🎬",
+      "உடை": "👕",
+      "வீட்டு செலவு": "🛋️",
+      "தனிநபர் பராமரிப்பு": "🧴",
+      "EMI / கடன்": "💳",
+      "தானம் / கொடை": "🤝"
+    };
+
+    // Register Service Worker for offline PWA functionality
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+          .catch(err => console.warn('Service Worker registration failed:', err));
+      });
+    }
+
+    // Unified API Router (routes to Remote Web App if saved, or google.script.run inside Sheets Iframe)
+    function callApi(action, payload, successCallback, failureCallback) {
+      const webAppUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+
+      if (!webAppUrl) {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (successCallback) successCallback(res);
+            })
+            .withFailureHandler(function(err) {
+              if (failureCallback) failureCallback(err);
+              else alert("Server Error: " + err.message);
+            })
+            .api(action, payload);
+          return;
+        }
+        alert("தயவுசெய்து Settings பக்கத்தில் Google Web App URL-ஐ சேமிக்கவும்.");
+        showTab("settingsTab", document.querySelector('.topbar button[onclick*="settingsTab"]'));
+        return;
+      }
+
+      // Bypass CORS preflight via Content-Type: text/plain
+      fetch(webAppUrl, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: JSON.stringify({ action: action, payload: payload })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not OK");
+        return response.json();
+      })
+      .then(res => {
+        if (successCallback) successCallback(res);
+      })
+      .catch(err => {
+        if (failureCallback) failureCallback(err);
+        else {
+          console.error("API Error: ", err);
+          alert("API இணைப்பு தோல்வியடைந்தது. URL சரியாக உள்ளதா என சரிபார்க்கவும்.");
+        }
+      });
+    }
+
+    function saveWebAppUrl() {
+      const urlInput = document.getElementById("webAppUrl").value.trim();
+      if (!urlInput) {
+        localStorage.removeItem("expense_webapp_url");
+        alert("Web App URL அகற்றப்பட்டது.");
+        return;
+      }
+      if (!urlInput.startsWith("https://script.google.com/")) {
+        alert("சரியான Google Script Web App URL-ஐ உள்ளிடவும்.");
+        return;
+      }
+      localStorage.setItem("expense_webapp_url", urlInput);
+      alert("Google Web App URL வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      initLoad();
+    }
+
+    function loadSavedUrl() {
+      const savedUrl = localStorage.getItem("expense_webapp_url") || "https://script.google.com/macros/s/AKfycbzAwAzwqUHvki6jJK210NqHRzZXVeDrg46QzrIz24Cgnso7w9HMn-Xo0B0xQm2A7I36Aw/exec";
+      document.getElementById("webAppUrl").value = savedUrl;
+    }
+
+    function getIconSvg(categoryName) {
+      return '<div class="category-icon">' + (iconMap[categoryName] || "•") + '</div>';
+    }
+
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function toggleAdvancedSettings() {
+      const box = document.getElementById("advancedSettingsBox");
+      box.classList.toggle("hidden");
+    }
+
+    function checkDbInitialized(res) {
+      const banner = document.getElementById("setupWarningBanner");
+      if (res && res.success === false && res.errorType === "database_not_initialized") {
+        banner.classList.remove("hidden");
+        return false;
+      }
+      banner.classList.add("hidden");
+      return true;
+    }
+
+    function runSetup() {
+      callApi("setup", null, function(res) {
+        alert(res.message || "Setup done");
+        document.getElementById("setupWarningBanner").classList.add("hidden");
+        initLoad();
+      });
+    }
+
+    function initLoad() {
+      loadSavedUrl();
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, "0");
+      const d = String(today.getDate()).padStart(2, "0");
+
+      document.getElementById("date").value = y + "-" + m + "-" + d;
+      document.getElementById("dailyInput").value = y + "-" + m + "-" + d;
+      document.getElementById("monthlyInput").value = y + "-" + m;
+      document.getElementById("yearlyInput").value = y;
+
+      loadCategories();
+      loadTransactions();
+      loadDashboard();
+      loadBudgets();
+      loadBudgetAlerts();
+      loadBackupList();
+    }
+
+    function loadCategories() {
+      callApi("categories", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        categoriesData = res;
+        populateCategories();
+        populateFilterCategory();
+      });
+    }
+
+    function populateCategories() {
+      const type = document.getElementById("type").value;
+      const grid = document.getElementById("categoryGrid");
+      grid.innerHTML = "";
+      const list = type === "Income" ? categoriesData.income : categoriesData.expense;
+
+      list.forEach(function(item) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "category-btn";
+        btn.innerHTML = getIconSvg(item) + '<div class="category-label">' + item + '</div>';
+        btn.onclick = function() { selectCategory(item, btn); };
+        grid.appendChild(btn);
+      });
+    }
+
+    function populateFilterCategory() {
+      const sel = document.getElementById("filterCategory");
+      sel.innerHTML = '<option value="">All Categories</option>';
+      [...(categoriesData.income || []), ...(categoriesData.expense || [])].forEach(function(cat) {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        sel.appendChild(opt);
+      });
+    }
+
+    function selectCategory(categoryName, element) {
+      document.getElementById("category").value = categoryName;
+      document.getElementById("selectedCategoryText").textContent = categoryName;
+      document.querySelectorAll(".category-btn").forEach(btn => btn.classList.remove("active"));
+      element.classList.add("active");
+    }
+
+    function clearCategorySelection() {
+      document.getElementById("category").value = "";
+      document.getElementById("selectedCategoryText").textContent = "இல்லை";
+      document.querySelectorAll(".category-btn").forEach(btn => btn.classList.remove("active"));
+    }
+
+    function resetForm() {
+      document.getElementById("editId").value = "";
+      document.getElementById("description").value = "";
+      document.getElementById("amount").value = "";
+      document.getElementById("notes").value = "";
+      document.getElementById("type").value = "Expense";
+      clearCategorySelection();
+      populateCategories();
+      document.getElementById("formTitle").textContent = "புதிய பதிவு";
+      document.getElementById("saveBtn").classList.remove("hidden");
+      document.getElementById("updateBtn").classList.add("hidden");
+      document.getElementById("cancelBtn").classList.add("hidden");
+    }
+
+    function saveTransaction() {
+      const data = {
+        type: document.getElementById("type").value,
+        date: document.getElementById("date").value,
+        category: document.getElementById("category").value,
+        description: document.getElementById("description").value,
+        amount: document.getElementById("amount").value,
+        paymentMethod: document.getElementById("paymentMethod").value,
+        notes: document.getElementById("notes").value
+      };
+
+      if (!data.date || !data.category || !data.description || !data.amount) {
+        return alert("தேவையான விவரங்களை நிரப்பவும்.");
+      }
+
+      callApi("add", data, function(res) {
+        if (res.success) {
+          alert("பதிவு சேமிக்கப்பட்டது");
+          resetForm();
+          loadTransactions();
+          loadDashboard();
+          loadBudgetAlerts();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function editTransaction(id) {
+      callApi("getById", { id: id }, function(res) {
+        if (!res.success) return alert(res.message);
+
+        const d = res.data;
+        document.getElementById("editId").value = d.id;
+        document.getElementById("date").value = d.date;
+        document.getElementById("type").value = d.type;
+        document.getElementById("description").value = d.description;
+        document.getElementById("amount").value = d.amount;
+        document.getElementById("paymentMethod").value = d.paymentMethod || "Cash";
+        document.getElementById("notes").value = d.notes || "";
+
+        populateCategories();
+
+        setTimeout(function() {
+          document.querySelectorAll(".category-btn").forEach(function(btn) {
+            if (btn.querySelector(".category-label").textContent.trim() === d.category) {
+              selectCategory(d.category, btn);
+            }
+          });
+        }, 80);
+
+        document.getElementById("formTitle").textContent = "பதிவை திருத்தவும்";
+        document.getElementById("saveBtn").classList.add("hidden");
+        document.getElementById("updateBtn").classList.remove("hidden");
+        document.getElementById("cancelBtn").classList.remove("hidden");
+
+        const addBtn = document.querySelector('.topbar button[onclick*="addTab"]');
+        showTab('addTab', addBtn);
+      });
+    }
+
+    function updateCurrentTransaction() {
+      const data = {
+        id: document.getElementById("editId").value,
+        type: document.getElementById("type").value,
+        date: document.getElementById("date").value,
+        category: document.getElementById("category").value,
+        description: document.getElementById("description").value,
+        amount: document.getElementById("amount").value,
+        paymentMethod: document.getElementById("paymentMethod").value,
+        notes: document.getElementById("notes").value
+      };
+
+      if (!data.id || !data.date || !data.category || !data.description || !data.amount) {
+        return alert("தேவையான விவரங்களை நிரப்பவும்.");
+      }
+
+      callApi("update", data, function(res) {
+        if (res.success) {
+          alert("பதிவு update செய்யப்பட்டது");
+          resetForm();
+          loadTransactions();
+          loadDashboard();
+          loadBudgetAlerts();
+          
+          const txBtn = document.querySelector('.topbar button[onclick*="transactionsTab"]');
+          showTab('transactionsTab', txBtn);
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function cancelEdit() {
+      resetForm();
+      const txBtn = document.querySelector('.topbar button[onclick*="transactionsTab"]');
+      showTab('transactionsTab', txBtn);
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm("இந்த பதிவை delete செய்யவா?")) return;
+
+      callApi("delete", { id: id }, function(res) {
+        if (res.success) {
+          alert("பதிவு delete செய்யப்பட்டது");
+          loadTransactions();
+          loadDashboard();
+          loadBudgetAlerts();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function loadTransactions() {
+      callApi("transactions", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        allTransactions = res.data || [];
+        filteredTransactions = [...allTransactions];
+        renderTransactionTable(filteredTransactions);
+      });
+    }
+
+    function renderTransactionTable(data) {
+      const tbody = document.getElementById("transactionTableBody");
+      tbody.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9">No transactions found</td></tr>';
+        return;
+      }
+
+      data.forEach(function(item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td>${item.date}</td>
+          <td>${item.type === 'Income' ? 'வருமானம்' : 'செலவு'}</td>
+          <td>${item.category}</td>
+          <td>${item.description || ""}</td>
+          <td class="${item.type === 'Income' ? 'green-val' : 'red-val'}">₹${Number(item.amount).toLocaleString("en-IN")}</td>
+          <td>${item.paymentMethod || ""}</td>
+          <td>${item.notes || ""}</td>
+          <td>
+            <button class="warning" style="padding: 6px 12px; font-size: 12px; border-radius: 4px;" onclick="editTransaction('${item.id}')">Edit</button>
+            <button class="danger" style="padding: 6px 12px; font-size: 12px; border-radius: 4px;" onclick="deleteTransaction('${item.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilters() {
+      const searchText = document.getElementById("searchText").value.toLowerCase().trim();
+      const from = document.getElementById("filterFrom").value;
+      const to = document.getElementById("filterTo").value;
+      const type = document.getElementById("filterType").value;
+      const category = document.getElementById("filterCategory").value;
+
+      filteredTransactions = allTransactions.filter(function(item) {
+        const matchSearch = !searchText ||
+          (item.description || "").toLowerCase().includes(searchText) ||
+          (item.category || "").toLowerCase().includes(searchText) ||
+          (item.notes || "").toLowerCase().includes(searchText);
+
+        const matchFrom = !from || item.date >= from;
+        const matchTo = !to || item.date <= to;
+        const matchType = !type || item.type === type;
+        const matchCategory = !category || item.category === category;
+
+        return matchSearch && matchFrom && matchTo && matchType && matchCategory;
+      });
+
+      renderTransactionTable(filteredTransactions);
+    }
+
+    function clearFilters() {
+      document.getElementById("searchText").value = "";
+      document.getElementById("filterFrom").value = "";
+      document.getElementById("filterTo").value = "";
+      document.getElementById("filterType").value = "";
+      document.getElementById("filterCategory").value = "";
+      filteredTransactions = [...allTransactions];
+      renderTransactionTable(filteredTransactions);
+    }
+
+    function exportCSV() {
+      const rows = [['ID','Date','Type','Category','Description','Amount','Payment Method','Notes']];
+      filteredTransactions.forEach(function(item) {
+        rows.push([
+          item.id, item.date, item.type, item.category,
+          item.description || '', item.amount, item.paymentMethod || '', item.notes || ''
+        ]);
+      });
+
+      const csv = rows.map(function(r) {
+        return r.map(function(v) {
+          return '"' + String(v).replace(/"/g, '""') + '"';
+        }).join(',');
+      }).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'expense-report.csv';
+      a.click();
+    }
+
+    function toggleReportInputs() {
+      const type = document.getElementById("reportType").value;
+      document.getElementById("dailyInput").style.display = type === "daily" ? "block" : "none";
+      document.getElementById("monthlyInput").style.display = type === "monthly" ? "block" : "none";
+      document.getElementById("yearlyInput").style.display = type === "yearly" ? "block" : "none";
+    }
+
+    function loadReport() {
+      const type = document.getElementById("reportType").value;
+      let value = "";
+      if (type === "daily") value = document.getElementById("dailyInput").value;
+      if (type === "monthly") value = document.getElementById("monthlyInput").value;
+      if (type === "yearly") value = document.getElementById("yearlyInput").value;
+
+      if (!value) return alert("தேதி / மாதம் / வருடம் தேர்வு செய்யவும்.");
+
+      callApi("report", { type: type, value: value }, function(res) {
+        if (!res.success) return;
+        document.getElementById("totalIncome").textContent = "₹" + Number(res.totalIncome).toLocaleString("en-IN");
+        document.getElementById("totalExpense").textContent = "₹" + Number(res.totalExpense).toLocaleString("en-IN");
+        document.getElementById("totalSavings").textContent = "₹" + Number(res.savings).toLocaleString("en-IN");
+        document.getElementById("totalEntries").textContent = res.totalEntries;
+      });
+    }
+
+    function loadDashboard() {
+      callApi("dashboard", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        const s = res.summary;
+
+        document.getElementById("homeTodayIncome").textContent = "₹" + Number(s.todayIncome).toLocaleString("en-IN");
+        document.getElementById("homeTodayExpense").textContent = "₹" + Number(s.todayExpense).toLocaleString("en-IN");
+        document.getElementById("homeTodaySavings").textContent = "₹" + Number(s.todaySavings).toLocaleString("en-IN");
+        document.getElementById("homeMonthIncome").textContent = "₹" + Number(s.monthIncome).toLocaleString("en-IN");
+        document.getElementById("homeMonthExpense").textContent = "₹" + Number(s.monthExpense).toLocaleString("en-IN");
+        document.getElementById("homeMonthSavings").textContent = "₹" + Number(s.monthSavings).toLocaleString("en-IN");
+        document.getElementById("homeTotalTransactions").textContent = s.totalTransactions;
+        document.getElementById("homeTopCategory").textContent = s.topCategory;
+
+        const recentDiv = document.getElementById("recentTransactions");
+        recentDiv.innerHTML = "";
+
+        if (!s.recent || s.recent.length === 0) {
+          recentDiv.innerHTML = "<div class='recent-item'><div class='recent-info'><span class='recent-category'>No recent entries</span></div></div>";
+        } else {
+          s.recent.forEach(function(r) {
+            const div = document.createElement("div");
+            div.className = "recent-item";
+            div.innerHTML = `
+              <div class="recent-info">
+                <span class="recent-category">${iconMap[r.category] || "•"} ${r.category}</span>
+                <span class="recent-meta">${r.date} • ${r.description || "-"}</span>
+              </div>
+              <div class="recent-amt ${r.type === 'Income' ? 'green' : 'red'}">
+                ${r.type === 'Income' ? '+' : '-'}₹${Number(r.amount).toLocaleString("en-IN")}
+              </div>
+            `;
+            recentDiv.appendChild(div);
+          });
+        }
+
+        renderHomeCharts(s);
+      });
+    }
+
+    function renderHomeCharts(summary) {
+      const ctx1 = document.getElementById("homeIncomeExpenseChart").getContext("2d");
+      const ctx2 = document.getElementById("homeCategoryChart").getContext("2d");
+
+      if (homeIncomeChart) homeIncomeChart.destroy();
+      if (homeCategoryChart) homeCategoryChart.destroy();
+
+      homeIncomeChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['வருமானம் (Income)', 'செலவு (Expense)'],
+          datasets: [{
+            label: 'இந்த மாதம் (₹)',
+            data: [summary.monthIncome, summary.monthExpense],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderRadius: 6,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      const catData = summary.monthExpenseByCategory || {};
+      const labels = Object.keys(catData);
+      const data = Object.values(catData);
+
+      homeCategoryChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: labels.length > 0 ? labels : ['செலவுகள் இல்லை'],
+          datasets: [{
+            data: data.length > 0 ? data : [1],
+            backgroundColor: labels.length > 0 ? [
+              '#a12c7b', '#01696f', '#ef6c00', '#1565c0', '#2e7d32',
+              '#c62828', '#6a1b9a', '#283593', '#00695c', '#ad1457'
+            ] : ['#e2e8f0'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { boxWidth: 12, font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    function loadBudgets() {
+      callApi("getBudgets", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        const container = document.getElementById("budgetSettingsList");
+        container.innerHTML = "";
+        res.data.forEach(function(item) {
+          const div = document.createElement("div");
+          div.className = "form-row budget-item";
+          div.innerHTML = `
+            <div style="flex:1; font-weight:600; display:flex; align-items:center;">
+              <span style="font-size: 1.2rem; margin-right: 8px;">${iconMap[item.category] || "•"}</span> ${item.category}
+            </div>
+            <div style="flex:1; display:flex; align-items:center;">
+              <span style="margin-right:8px; font-weight:bold;">₹</span>
+              <input type="number" class="budget-input" data-category="${item.category}" value="${item.budget}" placeholder="பட்ஜெட் தொகை">
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      });
+    }
+
+    function saveBudgetSettings() {
+      const inputs = document.querySelectorAll(".budget-input");
+      const items = [];
+      inputs.forEach(function(input) {
+        items.push({
+          category: input.getAttribute("data-category"),
+          budget: Number(input.value) || 0
+        });
+      });
+
+      callApi("saveBudgets", { items: items }, function(res) {
+        if (res.success) {
+          alert("பட்ஜெட் விவரங்கள் சேமிக்கப்பட்டன.");
+          loadBudgetAlerts();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function loadBudgetAlerts() {
+      callApi("budgetAlerts", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        const container = document.getElementById("budgetAlertsContainer");
+        container.innerHTML = "";
+        const activeAlerts = res.data.filter(b => b.budget > 0);
+
+        if (activeAlerts.length === 0) {
+          container.innerHTML = "<div class='no-alerts'>பட்ஜெட் எதுவும் அமைக்கப்படவில்லை. Settings பக்கத்தில் பட்ஜெட் அமைக்கலாம்.</div>";
+          return;
+        }
+
+        activeAlerts.forEach(function(b) {
+          const isOver = b.alert;
+          const pct = Math.min(b.percent, 100);
+          const barColor = isOver ? '#ef4444' : (b.percent > 80 ? '#f59e0b' : '#10b981');
+          const borderClass = isOver ? 'alert-danger' : '';
+
+          const div = document.createElement("div");
+          div.className = `alert-box ${borderClass}`;
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13.5px;">
+              <span style="font-weight: 700; color: #374151;">${iconMap[b.category] || "•"} ${b.category}</span>
+              <span style="font-weight: 500;">
+                ₹${Number(b.used).toLocaleString("en-IN")} / ₹${Number(b.budget).toLocaleString("en-IN")} (${b.percent}%)
+              </span>
+            </div>
+            <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow:hidden; margin-bottom: 6px;">
+              <div style="width: ${pct}%; background: ${barColor}; height: 100%; border-radius: 4px; transition: width 0.3s ease;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+              <span style="color:#6b7280;">மீதி: ₹${Number(b.balance).toLocaleString("en-IN")}</span>
+              ${isOver ? '<span class="alert-badge text-danger">⚠️ வரம்பு தாண்டியது!</span>' : '<span class="alert-badge text-success">✔️ பாதுகாப்பானது</span>'}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      });
+    }
+
+    function loadBackupList() {
+      callApi("backupList", null, function(res) {
+        if (!checkDbInitialized(res)) return;
+        const sel = document.getElementById("backupListSelect");
+        sel.innerHTML = "";
+
+        if (!res.data || res.data.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "பேக்கப் எதுவும் இல்லை";
+          sel.appendChild(opt);
+          return;
+        }
+
+        res.data.forEach(function(time) {
+          const opt = document.createElement("option");
+          opt.value = time;
+          opt.textContent = time;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    function createBackupNow() {
+      callApi("createBackup", null, function(res) {
+        if (res.success) {
+          alert("புதிய பேக்கப் உருவாக்கப்பட்டது: " + res.backupTime);
+          loadBackupList();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function restoreSelectedBackup() {
+      const backupTime = document.getElementById("backupListSelect").value;
+      if (!backupTime) return alert("தயவுசெய்து மீட்டெடுக்க வேண்டிய பேக்கப்பைத் தேர்வு செய்யவும்.");
+
+      if (!confirm(`தேர்ந்தெடுக்கப்பட்ட பேக்கப்பை (${backupTime}) மீட்டெடுக்க விரும்புகிறீர்களா? இது தற்போதைய தரவை மாற்றும்!`)) return;
+
+      callApi("restoreBackup", { backupTime: backupTime }, function(res) {
+        if (res.success) {
+          alert("தரவு வெற்றிகரமாக மீட்டெடுக்கப்பட்டது!");
+          initLoad();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    window.onload = initLoad;
+  </script>
+</body>
+</html>
